@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
+  <meta charset="UTF-8" />
   <title>Antek fun - gra 1 - snake</title>
   <style>
     body{
@@ -9,6 +10,7 @@
       margin:0;
       padding:0;
       line-height:1.6;
+      text-align:center;
     }
     header{
       background:#fff;
@@ -28,20 +30,141 @@
     }
     h2{
       margin-top:60px;
-   </style>
-  <body>
-    <header>
-      <h1>snake</h1>
-       <button class="btn"
+    }
+    .btn{
+      padding:10px 20px;
+      margin:5px;
+      border:none;
+      border-radius:6px;
+      background:green;
+      color:#fff;
+      cursor:pointer;
+      font-size:16px;
+    }
+    .btn:hover{
+      background:#0a7a0a;
+    }
+    canvas{
+      background:#222;
+      box-shadow:0 0 10px #000;
+      margin-top:20px;
+      display:block;
+      margin-left:auto;
+      margin-right:auto;
+    }
+    #score{
+      margin-top:10px;
+      font-size:18px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>snake</h1>
+    <button class="btn"
       onclick="window.location.href='https://dlaelektroant-dot.github.io/AntekFun/';">
       główna
     </button>
-    </header>
-    <nav>
-       <button class="btn">
-      start
-    </button>
-    </nav>
-    
-    
-  
+  </header>
+
+  <nav>
+    <button class="btn" onclick="startGame()">start</button>
+  </nav>
+
+  <section>
+    <canvas id="game" width="400" height="400"></canvas>
+    <div id="score">Score: 0</div>
+  </section>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const box = 20;
+    let score = 0;
+    let snake, direction, food, gameInterval;
+
+    function resetGame() {
+      score = 0;
+      document.getElementById("score").textContent = "Score: " + score;
+      snake = [{ x: 10 * box, y: 10 * box }];
+      direction = "RIGHT";
+      food = {
+        x: Math.floor(Math.random() * (canvas.width / box)) * box,
+        y: Math.floor(Math.random() * (canvas.height / box)) * box
+      };
+    }
+
+    document.addEventListener("keydown", changeDirection);
+
+    function changeDirection(e) {
+      if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+      else if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+      else if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
+      else if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // jedzenie
+      ctx.fillStyle = "red";
+      ctx.fillRect(food.x, food.y, box, box);
+
+      // wąż
+      ctx.fillStyle = "lime";
+      snake.forEach(part => {
+        ctx.fillRect(part.x, part.y, box, box);
+      });
+
+      // ruch
+      let head = { ...snake[0] };
+      if (direction === "LEFT") head.x -= box;
+      if (direction === "RIGHT") head.x += box;
+      if (direction === "UP") head.y -= box;
+      if (direction === "DOWN") head.y += box;
+
+      // kolizja
+      if (
+        head.x < 0 ||
+        head.y < 0 ||
+        head.x >= canvas.width ||
+        head.y >= canvas.height ||
+        collisionWithSnake(head, snake)
+      ) {
+        clearInterval(gameInterval);
+        alert("Game Over! Score: " + score);
+        return;
+      }
+
+      snake.unshift(head);
+
+      // zjedzenie
+      if (head.x === food.x && head.y === food.y) {
+        score++;
+        document.getElementById("score").textContent = "Score: " + score;
+        food = {
+          x: Math.floor(Math.random() * (canvas.width / box)) * box,
+          y: Math.floor(Math.random() * (canvas.height / box)) * box
+        };
+      } else {
+        snake.pop();
+      }
+    }
+
+    function collisionWithSnake(head, snake) {
+      return snake.some((part, index) =>
+        index !== 0 && part.x === head.x && part.y === head.y
+      );
+    }
+
+    function startGame() {
+      resetGame();
+      if (gameInterval) clearInterval(gameInterval);
+      gameInterval = setInterval(draw, 120);
+    }
+
+    // opcjonalnie: start od razu po wejściu
+    // startGame();
+  </script>
+</body>
+</html>
